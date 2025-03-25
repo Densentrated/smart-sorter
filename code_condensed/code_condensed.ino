@@ -39,18 +39,47 @@ Adafruit_HX711 loadCell(LOADCELL_DOUT, LOADCELL_SCK);
 void setup()
 {
     // Starting up weight cell
+    Serial.begin(115200);
+    while (!Serial) {
+      delay(10);
+    }
+
     loadCell.begin();
+
+    Serial.println("Tareing....");
+    for (uint8_t t=0; t<3; t++) {
+      loadCell.tareA(loadCell.readChannelRaw(CHAN_A_GAIN_128));
+      loadCell.tareA(loadCell.readChannelRaw(CHAN_A_GAIN_128));
+      loadCell.tareB(loadCell.readChannelRaw(CHAN_B_GAIN_32));
+      loadCell.tareB(loadCell.readChannelRaw(CHAN_B_GAIN_32));
+    }
 }
 
 void loop()
 {
   // Load Cell Will Need Calibration at Some Point
-  
   // Waits 5 Seconds
-  // Gets Weight From Weight Sensor
+  delay(5000);
+  // Gets Weight From Weight Sensor (prints weight)
+  int32_t weight = loadCell.readChannelBlocking(CHAN_A_GAIN_128);
+  Serial.print("Channel A (Gain 128): ");
+  Serial.println(weight);
   // Waits 1 Second
-  // If Weight is over threshold rotate and push object to left
-  // If Weight is over threshold rotate and push object to right
+  delay(1000);
+  // If Weight is over/equal to threshold rotate and push object to left, and rotates obejct to center
+  // If Weight is under threshold rotate and push object to right
+  int32_t threshold = 12;
+  if (weight >= threshold) {
+    baseMotor.step(STEPS_PER_REV / 2);
+    rollerA.step(STEPS_PER_REV * 4);
+    rollerB.step(STEPS_PER_REV * 4);
+    baseMotor.step(-STEPS_PER_REV / 2);
+  } else {
+    baseMotor.step(-STEPS_PER_REV / 2);
+    rollerA.step(STEPS_PER_REV * 4);;
+    rollerB.step(STEPS_PER_REV * 4);
+    baseMotor.step(STEPS_PER_REV / 2);
+  }
   // Stop Process
 
 }
